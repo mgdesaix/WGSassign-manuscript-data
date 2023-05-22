@@ -1,6 +1,14 @@
-# WGSassign-manuscript-data
+WGSassign-manuscript-data
+================
+Matt G. DeSaix, Marina D. Rodriguez, Kristen C. Ruegg, Eric C. Anderson
+
 These are the script and data files corresponding to the [WGSassign](https://github.com/mgdesaix/WGSassign) manuscript. WGSassign is a software package for performing population assignment from genotype likelihoods from low-coverage whole-genome sequencing data.
 
+The analysis scripts and data in this repository are organized by the 3 datasets used:
+
+* [Genetic simulations](https://github.com/mgdesaix/WGSassign-manuscript-data/blob/main/simulations/README.md)
+* [Chinook salmon](https://github.com/mgdesaix/WGSassign-manuscript-data/blob/main/chinook-salmon/README.md)
+* [Yellow warbler](https://github.com/mgdesaix/WGSassign-manuscript-data/blob/main/chinook-salmon/README.md)
 
 
 ### Acknowledgements

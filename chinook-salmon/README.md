@@ -1,4 +1,4 @@
-wgs-assign-salmon-explorations
+Chinook salmon and WGSassign
 ================
 Eric C. Anderson
 
