@@ -1,12 +1,12 @@
 #!/bin/bash
-#
+
 #################
 #set a job name
 #SBATCH --job-name=WGSassign
 #SBATCH --output=wgsa.out
 #SBATCH --error=wgsa.err
 #################
-#SBATCH --time=24:00:00
+#SBATCH --time=5:00:00
 #SBATCH --ntasks-per-node=24
 #################
 

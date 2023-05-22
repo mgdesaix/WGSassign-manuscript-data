@@ -11,7 +11,6 @@ library(tidyverse)
 
 
 ## Checking assignment
-
 ```{r}
 yewa.IDs <- read_csv("yewa.known.ind105.reference.IDs.csv")
 
