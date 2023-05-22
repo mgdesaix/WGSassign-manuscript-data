@@ -8,7 +8,7 @@ The analysis scripts and data in this repository are organized by the 3 datasets
 
 * [Genetic simulations](https://github.com/mgdesaix/WGSassign-manuscript-data/blob/main/simulations/README.md)
 * [Chinook salmon](https://github.com/mgdesaix/WGSassign-manuscript-data/blob/main/chinook-salmon/README.md)
-* [Yellow warbler](https://github.com/mgdesaix/WGSassign-manuscript-data/blob/main/chinook-salmon/README.md)
+* [Yellow warbler](https://github.com/mgdesaix/WGSassign-manuscript-data/blob/main/yellow-warbler/README.md)
 
 
 ### Acknowledgements
