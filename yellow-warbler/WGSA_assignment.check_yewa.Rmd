@@ -1,0 +1,48 @@
+---
+title: "WGSassign - checking assignment - YEWA"
+output: html_document
+date: "2023-05-10"
+---
+
+
+```{r}
+library(tidyverse)
+```
+
+
+## Checking assignment
+
+```{r}
+yewa.IDs <- read_csv("yewa.known.ind105.reference.IDs.csv")
+
+pops <- unique(yewa.IDs$Pop) %>% unique() %>% sort()
+
+like_loo <- read_table("yewa.wgs.assignment_LOO.txt",
+                       col_names = pops)
+
+assigned <- cbind(yewa.IDs, like_loo)
+```
+
+```{r}
+summary <- assigned %>% 
+  pivot_longer(cols = North:Central,
+               names_to = "AssignedPop",
+               values_to = "AssignedLike") %>% 
+  group_by(Sample) %>% mutate(AssignedProb = round(exp(AssignedLike - max(AssignedLike)) / sum(exp(AssignedLike - max(AssignedLike))),2 )) %>% 
+  filter(AssignedLike == max(AssignedLike)) %>% 
+  ungroup() 
+
+```
+
+```{r}
+summary %>%
+  pull(AssignedProb) %>%
+  summary()
+```
+
+```{r}
+summary %>%
+  mutate(Correct = ifelse(AssignedProb > 0.8 & Pop == AssignedPop, 1, 0)) %>%
+  group_by(Pop) %>% 
+  summarize(Accuracy = sum(Correct)/n())
+```
