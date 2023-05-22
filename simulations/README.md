@@ -14,6 +14,7 @@ All of these simulations followed similar general workflows:
 * Perform genetic simulations in [msprime](https://tskit.dev/msprime/docs/stable/intro.html)
 * Simulate genotype likelihoods from given read depths in [vcfgl](https://github.com/isinaltinkaya/vcfgl)
 * Filter variants with [bcftools](https://samtools.github.io/bcftools/bcftools.html)
-* Convert VCF files to Beagle files (custom script)
+* Convert VCF files to Beagle files (custom script: pl2gl.awk)
 * Run WGSassign
 
+The intermediary output from all of these steps is too large to provide the raw data. However, the summary data from these three simulations is provided in the `data/` directory. All scripts are provided in the `scripts/` directory, organized by simulation except for scripts that remained the same for all analyses.
