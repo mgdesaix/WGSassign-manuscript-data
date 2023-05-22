@@ -4,7 +4,7 @@ Marina D. Rodriguez
 
 This repository contains the code used to empirically test population assignment in WGSassign on Yellow Warbler data.
 
-The beagle file and ID file needed as input can be accessed through Dryad: 
+The beagle file and ID file needed as input can be accessed through Dryad: (will add link)
 
 To measure the assignment accuracy of WGSassign, we used leave-one-out cross validation (the --loo specification in WGSassign) using the input beagle file (yewa.known.ind105.ds_2x.beagle.gz) and our ID file (yewa.known.ind105.reference.IDs.txt). The ID file is a tab-delimited file with 2 columns, the first being the sample ID, and the second being the known reference population. The sample order in the ID file should match that of the input beagle file. Leave-one-out cross validation was run using the script [WGSassign.loo.sh](https://github.com/mgdesaix/WGSassign-manuscript-data/blob/main/yellow-warbler/WGSassign.loo.sh).
 
