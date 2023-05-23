@@ -1,0 +1,491 @@
+---
+title: "Final simulation summaries"
+author: "Matt G. DeSaix"
+date: "3/05/2023"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(RColorBrewer)
+library(viridis)
+```
+
+```{r}
+sim.sum <- read_table("./data/summary/simulation-maf-summary.txt") %>%
+  mutate(samples = factor(samples, levels = c(10, 50, 100, 500)),
+         read_depth = factor(read_depth, levels = c(0.1, 0.5, 1.0, 5.0, 10.0, 50.0)),
+         maf = factor(maf, levels = c("raw", "filtered"))) %>%
+  mutate(accuracy = (acc_pop1 + acc_pop2)/2,
+         ne = (ne_pop1 + ne_pop2)/2)
+```
+
+```{r}
+head(sim.sum)
+```
+
+
+```{r}
+accuracy.lm <- lm(accuracy ~ fst + ne + maf, data = sim.sum)
+summary(accuracy.lm)$coef
+```
+
+
+```{r}
+sim.sum %>%
+  summary()
+```
+
+```{r}
+sim.sum %>%
+  ggplot() +
+  geom_point(aes(x = fst, y = acc_pop1)) +
+  facet_grid(~samples)
+```
+
+```{r}
+sim.sum %>%
+  filter((ne_pop1+ne_pop2)/2 > 0.11) %>%
+  filter(fst > 0.015) %>%
+  group_by(samples) %>%
+  summarize(Accuracy = mean(acc_pop1),
+            Min_ne = round(min(ne_pop1, ne_pop2),2),
+            Min_acc = min(acc_pop1, acc_pop2),
+            Lowest_fst = min(fst),
+            Var_fst = var(fst))
+```
+
+
+```{r}
+sim.sum %>%
+  group_by(samples, read_depth) %>%
+  summarize(N = n(), .groups = "drop")
+```
+
+
+```{r}
+p.full.acc <- sim.sum %>%
+  rename(Fst = fst) %>%
+  filter((ne_pop1+ne_pop2)/2 > 0.11) %>%
+  filter(Fst < 0.03) %>%
+  ggplot() +
+  geom_point(aes(x = Fst, y = (acc_pop1+acc_pop2)/2, 
+                 color = log10((ne_pop1+ne_pop2)/2)),
+             alpha = 0.75, size = 2) +
+  theme_bw() +
+  scale_color_viridis_c("Effective Sample Size",
+                        option = "B", end = 0.9,
+                        breaks = c(-1, 0, 1, 2),
+                        labels = c(0.1, 1.0, 10.0, 100.0)) +
+  ylab("LOO Assignment Accuracy") +
+  theme(legend.position = "bottom",
+        legend.direction = "horizontal") +
+  facet_wrap(~samples, ncol = 1)
+p.full.acc
+
+ggsave(plot = p.full.acc,
+       filename = "./plots/large-simulation/large.sim.fstVaccuracy.facet.long.fstLT0_03.minNe.pdf",
+       dpi = 300,
+       height = 8,
+       width = 4)
+```
+
+
+```{r}
+p.full.acc.ne_sub <- sim.sum %>%
+  rename(Fst = fst) %>%
+  filter(Fst < 0.03, ne_pop1 > 5) %>%
+  ggplot() +
+  geom_point(aes(x = Fst, y = (acc_pop1+acc_pop2)/2, 
+                 color = log10((ne_pop1+ne_pop2)/2)),
+             alpha = 0.75, size = 2) +
+  theme_bw() +
+  scale_color_viridis_c("Effective Sample Size",
+                        option = "B", end = 0.9,
+                        breaks = c(-1, 0, 1, 2),
+                        labels = c(0.1, 1.0, 10.0, 100.0)) +
+  ylab("LOO Assignment Accuracy") +
+  theme(legend.position = "bottom",
+        legend.direction = "horizontal") +
+  facet_wrap(~samples, ncol = 1)
+p.full.acc.ne_sub
+```
+
+```{r}
+p.neVfst.acc <- sim.sum %>%
+  rename(Fst = fst) %>%
+  filter(Fst < 0.02) %>%
+  ggplot() +
+  geom_point(aes(x = Fst, y = log10((ne_pop1+ne_pop2)/2),
+                 color = (acc_pop1+acc_pop2)/2
+                 ),
+             alpha = 0.75, size = 2) +
+  theme_bw()
+p.neVfst.acc
+```
+
+
+
+```{r}
+p.acc.fst.ne <- sim.sum %>%
+  filter(fst < 0.01,
+         fst > 0.001) %>%
+  rename(Fst = fst) %>%
+  ggplot() +
+  geom_point(aes(x = Fst, y = acc_pop1, color = log10(ne_pop1)),
+             alpha = 0.75, size = 2) +
+  theme_bw() +
+  ylab("LOO Assignment Accuracy") +
+  labs(color = "Effective Sample Size (Log10)") +
+  theme(legend.position = "bottom") +
+  facet_wrap(~samples)
+
+p.acc.fst.ne
+
+# ggsave(plot = p.acc.fst.ne,
+#        filename = "./plots/large-simulation/new.large.sim.fstVaccuracy.facet.png",
+#        dpi = 300,
+#        height = 6,
+#        width = 10)
+```
+
+```{r}
+p.acc.ne <- sim.sum %>%
+  filter(fst < 0.005) %>%
+  filter(fst > 0.0001) %>%
+  filter(ne_pop1 > 1) %>%
+  mutate(fst = round(fst, 4)) %>%
+  ggplot() +
+  geom_point(aes(x = (ne_pop1 + ne_pop2)/2, y = (acc_pop1+acc_pop2)/2, 
+                 shape = samples, color = samples),
+             alpha = 0.75, size = 3) +
+  theme_bw() +
+  ylab("LOO Assignment Accuracy") +
+  xlab("Effective Sample Size (Log10 scale)") +
+  scale_color_manual(values = viridis(n = 4, end = 0.95)) +
+  theme(legend.position = "bottom") +
+  scale_x_continuous(trans = "log10") +
+  guides(
+    shape = guide_legend("Number of Samples", 
+                         override.aes = list(color = viridis(n = 4, end = 0.95),
+                                             size = 4)),
+    color = "none"
+  )
+p.acc.ne
+
+ggsave(plot = p.acc.ne,
+       filename = "./plots/large-simulation/large.sim.neVaccuracy.0_0001Fst_0_005.pdf",
+       dpi = 300,
+       height = 5,
+       width = 5)
+```
+
+```{r}
+p.acc.ne.facet <- sim.sum %>%
+  filter((ne_pop1+ne_pop2)/2 > 0.11,
+         fst > 0.0001) %>%
+  mutate(fst_category = ifelse(fst > 0.01, "Fst > 0.01", 
+                               ifelse(fst < 0.005, "Fst < 0.005", "0.005 < Fst < 0.01"))) %>%
+  mutate(fst_category = factor(fst_category, levels = c("Fst < 0.005", 
+                                                        "0.005 < Fst < 0.01", 
+                                                        "Fst > 0.01"))) %>%
+  mutate(fst = round(fst, 4)) %>%
+  ggplot() +
+  geom_point(aes(x = (ne_pop1 + ne_pop2)/2, y = (acc_pop1+acc_pop2)/2, 
+                 shape = samples, color = samples),
+             alpha = 0.75, size = 3) +
+  theme_bw() +
+  ylab("LOO Assignment Accuracy") +
+  xlab("Effective Sample Size (Log10 scale)") +
+  scale_color_manual(values = viridis(n = 4, end = 0.95)) +
+  theme(legend.position = "bottom") +
+  scale_x_continuous(trans = "log10") +
+  guides(
+    shape = guide_legend("Number of Samples", 
+                         override.aes = list(color = viridis(n = 4, end = 0.95),
+                                             size = 4)),
+    color = "none"
+  ) +
+    facet_wrap(~fst_category, ncol = 1)
+
+ggsave(plot = p.acc.ne.facet,
+       filename = "./plots/large-simulation/large.sim.neVaccuracy.facet.pdf",
+       dpi = 300,
+       height = 8,
+       width = 5)
+
+p.acc.ne.facet
+```
+
+
+
+```{r}
+p.runtime <- ggplot(sim.sum) +
+  geom_boxplot(aes(x = samples, y = runtime,
+                   color = read_depth)) +
+  theme_bw() +
+  ylab("Time (seconds)") +
+  xlab("Number of individuals sampled (per pop)") +
+  labs(title = "WGSassign runtime for LOO accuracy and effective sample size estimation",
+       subtitle = "2 populations, 100k SNPs, 10 threads")
+
+p.runtime
+
+# ggsave(plot = p.runtime,
+#        filename = "./plots/large-simulation/new.runtime-WGSassign.png",
+#        dpi = 300,
+#        height = 6, width = 8)
+```
+
+```{r}
+
+p.runtime.all <- sim.sum %>% 
+  select(samples, read_depth, fst, runtime, runtime_full) %>%
+  
+  pivot_longer(cols = c(runtime, runtime_full),
+               names_to = "statistic",
+               values_to = "value") %>%
+  mutate(statistic = ifelse(statistic == "runtime", "Basic runtime", "LOO runtime")) %>%
+  # mutate(log10_value = ifelse(is.infinite(log10(value)), 0, log10(value))) %>%
+  ggplot() +
+  geom_boxplot(aes(x = samples, y = value,
+                   color = read_depth)) +
+  theme_bw() +
+  scale_y_continuous(trans = "log10") +
+  facet_grid(~statistic) +
+  ylab("Time (Log10 scale seconds)") +
+  xlab("Number of individuals sampled (per population)") +
+  scale_color_discrete(name = "Read depth",
+                       labels = c("0.1X", "0.5X", "1.0X", "5.0X", "10.0X", "50.0X"))
+
+p.runtime.all
+
+ggsave(plot = p.runtime.all,
+       filename = "./plots/large-simulation/runtime-WGSassign.pdf",
+       dpi = 300,
+       height = 5, width = 7)
+```
+
+
+```{r}
+sim.sum %>%
+  group_by(samples) %>%
+  summarize(Mean = mean(runtime))
+```
+
+
+```{r}
+p.rdVsamples.ne <- sim.sum %>%
+  group_by(read_depth, samples, maf) %>%
+  summarize(ne_pop1 = mean(ne_pop1),
+            .groups = "drop") %>%
+  mutate(maf = ifelse(maf == "filtered", "MAF", "None")) %>%
+  filter(maf == "MAF") %>%
+  ggplot() +
+  geom_point(aes(x = read_depth, y = ne_pop1, 
+                 color = samples
+                 # shape = maf
+                 ),
+             size = 4, alpha = 0.75,
+             shape = 17) +
+  scale_color_manual(values = viridis(n = 4, end = 0.95)) +
+  theme_bw() +
+  ylab("Effective Sample Size (Log10 scale)") +
+  xlab("Read Depth") +
+  labs(color = "Number of Samples"
+       # shape = "SNP Filtering"
+       ) +
+  theme(legend.position = "bottom",
+        legend.box = "vertical") +
+  scale_y_continuous(trans = "log10")
+
+ggsave(plot = p.rdVsamples.ne,
+       filename = "./plots/large-simulation/large.sim.rdVsamples.ne.nomaf.pdf",
+       dpi = 300,
+       height = 5,
+       width = 5)
+
+p.rdVsamples.ne
+```
+
+
+### Unequal sample size
+
+```{r}
+sim.unequal <- read_table("./data/summary/simulation-unequal-summary.txt") %>%
+  # mutate(samples_pop1 = factor(samples_pop1, levels = c(10, 50, 100)),
+  #        samples_pop2 = factor(samples_pop2, levels = c(10, 50, 100)),
+  #        read_depth = factor(read_depth, levels = c(1.0, 5.0, 10.0))) %>%
+  mutate(read_depth = replace(read_depth, read_depth == 1, "1.0X"),
+         read_depth = replace(read_depth, read_depth == 5, "5.0X"),
+         read_depth = replace(read_depth, read_depth == 10, "10.0X")) %>%
+  mutate(read_depth = factor(read_depth, levels = c("1.0X", "5.0X", "10.0X"))) %>%
+  rename("Fst" = "fst")
+```
+
+```{r}
+summary(sim.unequal)
+```
+
+```{r}
+p.hist <- sim.unequal %>%
+  ggplot() +
+  geom_histogram(aes(x = ne_pop1/ne_pop2),
+                 bins = 100) +
+  xlim(c(0,1.1)) +
+  theme_bw()
+p.hist
+```
+
+
+
+
+```{r}
+p.unequal <- sim.unequal %>%
+  filter(# (ne_pop1 + ne_pop2)/2 > 20,
+         # ne_pop1 > 8,
+         # ne_pop2 > 8,
+         # Fst < 0.01,
+         Fst > 0.01,
+         # samples_pop1 %in% c(50, 100),
+         # samples_pop2 %in% c(50, 100)
+         ) %>%
+  mutate(samples_pop1 = as.numeric(as.character(samples_pop1)),
+         samples_pop2 = as.numeric(as.character(samples_pop2))) %>%
+  pivot_longer(cols = c("acc_pop1", "acc_pop2"), names_to = "Accuracy", values_to = "Values") %>%
+  ggplot() +
+  geom_point(aes(x = ne_pop1/ne_pop2, 
+                 y = Values, color = Accuracy),
+             alpha = 0.75, size = 3) +
+  scale_x_continuous(trans = "log10") +
+  theme_bw() +
+  xlab("Ratio of Population Effective Sample Size (Log10)") +
+  ylab("Mean Accuracy of Assignment")
+
+# ggsave(plot = p.unequal,
+#        filename = "./plots/large-simulation/unequal.sim.pdf",
+#        dpi = 300,
+#        height = 6,
+#        width = 6)
+
+p.unequal
+```
+
+
+```{r}
+p.unequal2 <- sim.unequal %>%
+  mutate(ratio = ifelse(ne_pop1/ne_pop2 < 0.9, "Pop1 < Pop2", 
+                        ifelse(ne_pop1/ne_pop2 > 1.1, "Pop1 > Pop2", "Equal"))) %>%
+  # filter(# ne_pop1 > 8,
+         # ne_pop2 > 8,
+         # fst < 0.01,
+         # fst > 0.0005,
+         # samples_pop1 %in% c(50, 100),
+         # samples_pop2 %in% c(50, 100)) %>%
+  pivot_longer(cols = c("acc_pop1", "acc_pop2"), names_to = "Population", values_to = "Accuracy") %>%
+  mutate(Samples = ifelse(Population == "acc_pop1", samples_pop1, samples_pop2),
+         Population = ifelse(Population == "acc_pop1", "Pop1", "Pop2")) %>%
+  mutate(Samples = factor(Samples, levels = c(10, 50, 100))) %>%
+  ggplot() +
+  geom_point(aes(x = Fst, y = Accuracy, 
+                 color = Population, shape = Samples)) +
+  facet_grid(read_depth~ratio) +
+  scale_color_manual(values = brewer.pal(n = 3, name = "Dark2")[c(1,2)]) +
+  theme_bw() +
+  xlim(c(0,0.03))
+
+ggsave(plot = p.unequal2,
+       filename = "./plots/large-simulation/unequal.samples.sim.pdf",
+       dpi = 300,
+       height = 6,
+       width = 8)
+
+p.unequal2
+```
+
+
+```{r}
+sim.unequal %>%
+  mutate(ratio_pop1 = ne_pop1/ne_pop2) %>%
+  ggplot() +
+  geom_point(aes(x = ratio_pop1, y = (acc_pop1 + acc_pop2)/2))
+```
+
+
+### Z-score simulation
+
+```{r}
+sim.z <- read_table("./data/summary/simulation-zscore-summary.txt") %>%
+  mutate(read_depth = replace(read_depth, read_depth == 1, "1.0X"),
+         read_depth = replace(read_depth, read_depth == 5, "5.0X")) %>%
+  mutate(read_depth = factor(read_depth, levels = c("1.0X", "5.0X"))) %>%
+  mutate(samples = factor(samples, levels = c(10, 50, 100)))
+```
+
+
+```{r}
+p.z.1 <- sim.z %>%
+  mutate(pop = ifelse(pop == "pop2", "Pop2", "Pop3")) %>%
+  ggplot() +
+  geom_point(aes(x = fst_23,
+                   y = z_ind_pop3,
+                   color = pop),
+             alpha = 0.75) +
+  scale_color_manual(values = brewer.pal(n = 3, name = "Dark2")[c(2,3)]) +
+  facet_grid(read_depth~samples) + 
+  theme_bw() +
+  xlab("Fst") +
+  ylab("Z-score") +
+  guides(
+    color = guide_legend("Population", override.aes = list(size = 4, alpha = 0.75))
+  )
+
+# ggsave(filename = "./plots/large-simulation/z-score.full.pdf",
+#        plot = p.z.1,
+#        dpi = 300, height = 6, width = 8)
+
+p.z.1
+```
+
+
+```{r}
+p.z.2 <- sim.z %>%
+    filter(fst_23 < 0.05) %>%
+  ggplot() +
+  geom_point(aes(x = fst_23,
+                   y = z_ind_pop3,
+                   color = pop),
+             alpha = 0.75) +
+  scale_color_manual(values = brewer.pal(n = 3, name = "Dark2")[c(2,3)]) +
+  facet_grid(read_depth~samples) + 
+  theme_bw() +
+  xlab("Fst") +
+  ylab("Z-score")
+
+
+ggsave(filename = "./plots/large-simulation/z-score.fst_sub.pdf",
+       plot = p.z.2,
+       dpi = 300, height = 6, width = 8)
+
+p.z.2
+```
+
+```{r}
+p.z.box <- sim.z %>%
+  ggplot() +
+  geom_boxplot(aes(x = fst_23,
+                   y = z_ind_pop3,
+                   group = sim,
+                   fill = pop),
+             alpha = 0.75) +
+  scale_fill_manual(values = brewer.pal(n = 3, name = "Dark2")[c(2,3)]) +
+  facet_grid(read_depth~samples) + 
+  theme_bw() +
+  xlab("Fst") +
+  ylab("Z-score")
+
+p.z.box
+```
+
+
+

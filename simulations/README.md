@@ -17,4 +17,5 @@ All of these simulations followed similar general workflows:
 * Convert VCF files to Beagle files (custom script: pl2gl.awk)
 * Run WGSassign
 
-The intermediary output from all of these steps is too large to provide the raw data. However, the summary data from these three simulations is provided in the `data/` directory. All scripts are provided in the `scripts/` directory, organized by simulation except for scripts that remained the same for all analyses.
+The intermediary output from all of these steps is too large to provide the raw data. However, the summary data from these three simulations is provided in the `data/` directory. All scripts are provided in the `scripts/` directory, organized by simulation except for scripts that remained the same for all analyses. The `.sh` files performed the entire workflow from simulating genetic data to running WGSassign. The `.Rmd` file was used to summarize all data and make figures for the simulated data.
+
